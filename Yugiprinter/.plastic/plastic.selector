@@ -1,0 +1,4 @@
+repository "Yugiprinter/Yugiprinter@18967278627924@cloud"
+  path "/"
+    br "/main"
+    co "/main"
