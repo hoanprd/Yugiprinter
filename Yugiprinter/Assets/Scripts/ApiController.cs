@@ -6,10 +6,11 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine.Networking;
+using TMPro;
 
 public class ApiController : MonoBehaviour
 {
-    public Text waitText;
+    public TMP_Text waitText;
     public string apiUrl, saveDirectory;
     private string duongdanDoc, settingDecklistPath, settingSaveDownloadPath;
     public string[] tempArray;
@@ -18,7 +19,7 @@ public class ApiController : MonoBehaviour
 
     private void Start()
     {
-        duongdanDoc = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        /*duongdanDoc = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         settingSaveDownloadPath = duongdanDoc + @"\YugiohPrinterSetting\SettingValue1.txt";
         settingDecklistPath = duongdanDoc + @"\YugiohPrinterSetting\SettingValue7.txt";
 
@@ -34,7 +35,9 @@ public class ApiController : MonoBehaviour
             {
                 tempArray[i] = lines[i];
             }
-        }
+        }*/
+
+
 
         List<string> list = new List<string>(tempArray);
         list.RemoveAll(string.IsNullOrEmpty);
