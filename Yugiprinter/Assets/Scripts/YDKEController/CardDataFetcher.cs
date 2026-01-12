@@ -24,6 +24,8 @@ public class CardDataFetcher : MonoBehaviour
     [Header("Config")]
     public string apiUrl;
     public string saveDirectory;
+    public string deckListFolderSettingPath;
+    public string deckListFileSetting;
 
     private string[] tempArray;
     private string[] cardURL;
@@ -59,7 +61,7 @@ public class CardDataFetcher : MonoBehaviour
         {
             TypedDeck deck = YdkeParser.ParseURL(ydkeString);
             List<int> allPasscodes = deck.main.Concat(deck.extra).Concat(deck.side)
-                                        .Where(id => id != 0).Distinct().ToList();
+                                        .Where(id => id != 0).ToList();
 
             if (allPasscodes.Count == 0)
             {
@@ -68,6 +70,28 @@ public class CardDataFetcher : MonoBehaviour
             }
 
             tempArray = allPasscodes.Select(id => id.ToString()).ToArray();
+
+            string readDeckListPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + deckListFolderSettingPath + deckListFileSetting;
+
+            Debug.Log(readDeckListPath);
+
+            try
+            {
+                // Kiểm tra nếu thư mục chưa tồn tại thì tạo mới
+                if (!Directory.Exists(deckListFolderSettingPath))
+                {
+                    Directory.CreateDirectory(deckListFolderSettingPath);
+                }
+
+                // Ghi toàn bộ mảng tempArray vào file, mỗi phần tử một dòng
+                File.WriteAllLines(readDeckListPath, tempArray);
+                Debug.Log("Đã lưu danh sách Passcode vào: " + readDeckListPath);
+            }
+            catch (Exception fileEx)
+            {
+                Debug.LogError("Lỗi khi ghi file setting: " + fileEx.Message);
+            }
+
             cardURL = tempArray.Select(id => "https://images.ygoprodeck.com/images/cards/" + id + ".jpg").ToArray();
 
             // Xóa dữ liệu cũ ở cả 2 bảng
