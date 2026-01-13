@@ -1,0 +1,3 @@
+[submodule "Packages/PRDsubmodule"]
+	path = Packages/PRDsubmodule
+	url = https://github.com/hoanprd/PRDMainSubmodule.git

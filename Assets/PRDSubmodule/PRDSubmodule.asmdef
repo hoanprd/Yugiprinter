@@ -1,0 +1,16 @@
+{
+    "name": "PRDSubmodule",
+    "rootNamespace": "",
+    "references": [
+        "GUID:fb8b0b333f9324844acb76df7e8c87e6"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
