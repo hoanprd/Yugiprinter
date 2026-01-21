@@ -7,6 +7,8 @@ using UnityEngine.UI;
 using System;
 using TMPro;
 using System.IO;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
 public class CardDataFetcher : MonoBehaviour
 {
@@ -29,6 +31,7 @@ public class CardDataFetcher : MonoBehaviour
 
     private string[] tempArray;
     private string[] cardURL;
+    public string printAppOpenPath;
 
     public void DropdownValueChanged(TMP_Dropdown change)
     {
@@ -127,6 +130,23 @@ public class CardDataFetcher : MonoBehaviour
         }
 
         waitText.text = "Quá trình hoàn tất!";
+        //Process.Start(printAppOpenPath);
+        // Đường dẫn gốc trong Unity
+        string templateSource = Path.Combine(Application.streamingAssetsPath, "Doc1.docx");
+        // Đường dẫn đích ngoài Unity (ví dụ MyDocuments)
+        string templateDest = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Doc1.docx");
+
+        // Copy file nếu chưa có
+        if (!File.Exists(templateDest))
+            File.Copy(templateSource, templateDest, true);
+
+        // Chạy app ngoài, set WorkingDirectory là thư mục chứa Doc1.docx
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = printAppOpenPath,
+            WorkingDirectory = Path.GetDirectoryName(templateDest)
+        };
+        Process.Start(startInfo);
     }
 
     private IEnumerator DownloadAndDisplay(string url, string savePath, CardUIItem uiItem)

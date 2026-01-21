@@ -2613,6 +2613,7 @@ MonoBehaviour:
   saveDirectory: C:\Users\DELL\Desktop\CardImageData
   deckListFolderSettingPath: \PRD Team\YugipriterSetting
   deckListFileSetting: \settingDeckString.txt
+  printAppOpenPath: E:\PostGitHub\YugiPrinterController\YugiprinterController\bin\Debug\YugiprinterController.exe
 --- !u!4 &1624131800
 Transform:
   m_ObjectHideFlags: 0
