@@ -19,6 +19,6 @@ public class StartController : MonoBehaviour
 
     public void StartButtonGo()
     {
-        SceneManager.LoadScene("MainScene");
+        SceneManager.LoadScene("MenuScene");
     }    
 }
