@@ -7,6 +7,8 @@ using UnityEngine.UI;
 using System;
 using TMPro;
 using System.IO;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
 public class CardDataFetcher : MonoBehaviour
 {
@@ -14,30 +16,41 @@ public class CardDataFetcher : MonoBehaviour
     public TMP_Text resultText;
     public TMP_InputField ydkeInputField;
     public TMP_Text waitText;
-    public Button downCardButton, printCardButton;
+    public GameObject downCardButton, printCardButton;
 
     [Header("Scroll View Settings")]
-    public GameObject infoCardPrefab; // Prefab có gắn CardUIItem
-    public Transform infoPanel;      // Content của Scroll View thành công
-    public Transform errorPanel;     // Content của Scroll View thất bại (MỚI)
+    public GameObject infoCardPrefab;
+    public Transform infoPanel;
+    public Transform errorPanel;
 
     [Header("Config")]
     public string apiUrl;
     public string saveDirectory;
-    public string deckListFolderSettingPath;
-    public string deckListFileSetting;
+    //public string deckListFolderSettingPath;
+    //public string deckListFileSetting;
+    public string deckListSettingPath;
+    public string cardListSettingPath;
 
     private string[] tempArray;
     private string[] cardURL;
+    public string printAppOpenPath;
 
-    public void DropdownValueChanged(TMP_Dropdown change)
+    void Start()
     {
-        int index = change.value; // Lấy vị trí (0, 1, 2...)
-        string selectedText = change.options[index].text; // Lấy chữ hiển thị
+        // Khởi động nút tải thẻ
+        saveDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\CardImageData";
+        printAppOpenPath = Path.Combine(Application.streamingAssetsPath, "YugiprinterController.exe");
+        deckListSettingPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\PRD Team\\YugipriterSetting";
+        cardListSettingPath = Path.Combine(deckListSettingPath, "settingDeckString.txt");
+    }
+
+    /*public void DropdownValueChanged(TMP_Dropdown change)
+    {
+        int index = change.value;
+        string selectedText = change.options[index].text;
 
         Debug.Log("Bạn đã chọn mục số: " + index + " có tên là: " + selectedText);
 
-        // Thực hiện lệnh của bạn tại đây
         if (selectedText == "Offline")
         {
             downCardButton.enabled = false;
@@ -45,8 +58,8 @@ public class CardDataFetcher : MonoBehaviour
         else
         {
             downCardButton.enabled = true;
-        }    
-    }
+        }
+    }*/
 
     public void OnDecodeAndFetchClicked()
     {
@@ -59,6 +72,7 @@ public class CardDataFetcher : MonoBehaviour
 
         try
         {
+            downCardButton.SetActive(false);
             TypedDeck deck = YdkeParser.ParseURL(ydkeString);
             List<int> allPasscodes = deck.main.Concat(deck.extra).Concat(deck.side)
                                         .Where(id => id != 0).ToList();
@@ -71,21 +85,25 @@ public class CardDataFetcher : MonoBehaviour
 
             tempArray = allPasscodes.Select(id => id.ToString()).ToArray();
 
-            string readDeckListPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + deckListFolderSettingPath + deckListFileSetting;
+            //string readDeckListPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + deckListFolderSettingPath + deckListFileSetting;
 
-            Debug.Log(readDeckListPath);
+            Debug.Log(deckListSettingPath);
 
             try
             {
-                // Kiểm tra nếu thư mục chưa tồn tại thì tạo mới
-                if (!Directory.Exists(deckListFolderSettingPath))
+                if (!Directory.Exists(deckListSettingPath))
                 {
-                    Directory.CreateDirectory(deckListFolderSettingPath);
+                    Directory.CreateDirectory(deckListSettingPath);
                 }
 
-                // Ghi toàn bộ mảng tempArray vào file, mỗi phần tử một dòng
-                File.WriteAllLines(readDeckListPath, tempArray);
-                Debug.Log("Đã lưu danh sách Passcode vào: " + readDeckListPath);
+                if (!File.Exists(cardListSettingPath))
+                {
+                    File.WriteAllText(cardListSettingPath, string.Empty);
+                }
+
+                //File.WriteAllLines(readDeckListPath, tempArray);
+                File.WriteAllLines(cardListSettingPath, tempArray);
+                Debug.Log("Đã lưu danh sách Passcode vào: " + deckListSettingPath);
             }
             catch (Exception fileEx)
             {
@@ -104,6 +122,7 @@ public class CardDataFetcher : MonoBehaviour
         catch (Exception e)
         {
             resultText.text = $"Lỗi: {e.Message}";
+            downCardButton.SetActive(true);
         }
     }
 
@@ -127,6 +146,26 @@ public class CardDataFetcher : MonoBehaviour
         }
 
         waitText.text = "Quá trình hoàn tất!";
+        //downCardButton.SetActive(false);
+        printCardButton.SetActive(true);
+    }
+
+    public void PrintCardControllerOpen()
+    {
+        string templateSource = Path.Combine(Application.streamingAssetsPath, "Doc1.docx");
+        string templateDest = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Doc1.docx");
+
+        if (!File.Exists(templateDest))
+            File.Copy(templateSource, templateDest, true);
+
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = printAppOpenPath,
+            WorkingDirectory = Path.GetDirectoryName(templateDest)
+        };
+        Process.Start(startInfo);
+        downCardButton.SetActive(true);
+        printCardButton.SetActive(false);
     }
 
     private IEnumerator DownloadAndDisplay(string url, string savePath, CardUIItem uiItem)
@@ -136,21 +175,18 @@ public class CardDataFetcher : MonoBehaviour
 
         if (request.result != UnityWebRequest.Result.Success)
         {
-            // THẤT BẠI: Đưa object sang errorPanel
             uiItem.transform.SetParent(errorPanel, false);
-            uiItem.UpdateStatus("Lỗi: " + url + " - " + request.error); // Hoặc hiện ID lỗi
+            uiItem.UpdateStatus("Lỗi: " + url + " - " + request.error);
             Debug.LogError($"Lỗi tải {url}: {request.error}");
         }
         else
         {
-            // THÀNH CÔNG: Hiển thị ảnh
             Texture2D texture = DownloadHandlerTexture.GetContent(request);
             Sprite cardSprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
 
             uiItem.SetImage(cardSprite);
             uiItem.UpdateStatus("Hoàn tất");
 
-            // Lưu file
             byte[] bytes = request.downloadHandler.data;
             File.WriteAllBytes(savePath, bytes);
         }
