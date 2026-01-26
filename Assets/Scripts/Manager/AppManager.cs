@@ -13,6 +13,8 @@ public class AppManager : MonoBehaviour
 {
     public static AppManager Instance;
 
+    SceneFunctional sceneFunctional;
+
     public GameObject appSetting;
     public GameObject cardPrintSetting, otherSetting;
     public TMP_InputField imageDownPath;
@@ -49,7 +51,8 @@ public class AppManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
-        introFunctional = new IntroFunctional();
+
+        sceneFunctional = new SceneFunctional();
     }
 
     private void OnDestroy()
@@ -281,6 +284,6 @@ public class AppManager : MonoBehaviour
 
     public void ChangeScene(string sceneName, bool loadingOn)
     {
-        
+        sceneFunctional.ChangeScene(sceneName, 0f, null, false, 0f);
     }
 }
