@@ -7,6 +7,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SocialPlatforms.Impl;
 using UnityEngine.UI;
+using PRD;
 
 public class AppManager : MonoBehaviour
 {
@@ -48,6 +49,7 @@ public class AppManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+        introFunctional = new IntroFunctional();
     }
 
     private void OnDestroy()
@@ -275,5 +277,10 @@ public class AppManager : MonoBehaviour
                 Debug.LogWarning("Unknown setting option: " + option);
                 break;
         }
+    }
+
+    public void ChangeScene(string sceneName, bool loadingOn)
+    {
+        
     }
 }
