@@ -17,6 +17,7 @@ public class AppManager : MonoBehaviour
 
     public GameObject appSetting;
     public GameObject cardPrintSetting, otherSetting;
+    public GameObject loadingImage;
     public TMP_InputField imageDownPath;
     public Toggle printCloseToggle;
 
@@ -282,8 +283,8 @@ public class AppManager : MonoBehaviour
         }
     }
 
-    public void ChangeScene(string sceneName, bool loadingOn)
+    public void ChangeScene(string sceneName, float timeChangeScene, bool loadingOn, float timeLoad)
     {
-        sceneFunctional.ChangeScene(sceneName, 0f, null, false, 0f);
+        StartCoroutine(sceneFunctional.ChangeScene(sceneName, timeChangeScene, loadingImage, loadingOn, timeLoad));
     }
 }
