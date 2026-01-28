@@ -1,4 +1,5 @@
-﻿using SFB;
+﻿using PRD;
+using SFB;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,8 +13,13 @@ public class AppManager : MonoBehaviour
 {
     public static AppManager Instance;
 
+    SceneFunctional sceneFunctional;
+
     public GameObject appSetting;
     public GameObject cardPrintSetting, otherSetting;
+    public GameObject loadingImage;
+    public Slider bgmVolumeSlider, fxVolumeSlider;
+    public AudioSource[] bgmAudioSource, fxAudioSource;
     public TMP_InputField imageDownPath;
     public Toggle printCloseToggle;
 
@@ -21,6 +27,8 @@ public class AppManager : MonoBehaviour
     // It's recommended to rename this to `SelectedFolderPath` (PascalCase) later.
     public string selectedFolderPath { get; private set; } = string.Empty;
     public bool printCloseToCard { get; private set; } = false;
+    public float bgmAudioVolume { get; private set; } = 0.5f;
+    public float fxAudioVolume { get; private set; } = 0.5f;
 
     // Events so other scripts can react to changes instead of polling.
     public event Action<string> OnSelectedFolderPathChanged;
@@ -48,6 +56,8 @@ public class AppManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        sceneFunctional = new SceneFunctional();
     }
 
     private void OnDestroy()
@@ -89,12 +99,28 @@ public class AppManager : MonoBehaviour
                     Debug.LogWarning("Could not create default CardImageData folder: " + dirEx.Message);
                 }
 
+                if (bgmAudioSource != null)
+                {
+                    for (int i = 0; i < bgmAudioSource.Length; i++)
+                    {
+                        bgmAudioSource[i].volume = 0.5f;
+                    }
+                    bgmVolumeSlider.value = 0.5f;
+                }
+                if (fxAudioSource != null)
+                {
+                    for (int i = 0; i < fxAudioSource.Length; i++)
+                    {
+                        fxAudioSource[i].volume = 0.5f;
+                    }
+                    fxVolumeSlider.value = 0.5f;
+                }
+
                 SaveSettings();
                 Debug.Log("Settings file not found. Created default settings at: " + settingsFilePath);
             }
             else
             {
-                // Read and parse key:value lines
                 string[] lines = File.ReadAllLines(settingsFilePath);
                 foreach (var raw in lines)
                 {
@@ -114,6 +140,14 @@ public class AppManager : MonoBehaviour
                     {
                         if (bool.TryParse(value, out var b)) printCloseToCard = b;
                     }
+                    else if (key.Equals("BGMAudioVolume", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (float.TryParse(value, out var f)) bgmAudioVolume = f;
+                    }
+                    else if (key.Equals("FXAudioVolume", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (float.TryParse(value, out var f)) fxAudioVolume = f;
+                    }
                 }
 
                 // If no path read from file, fallback to default
@@ -122,10 +156,26 @@ public class AppManager : MonoBehaviour
                     selectedFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "CardImageData");
                 }
 
-                Debug.Log("Loaded settings. Path=" + selectedFolderPath + " PrintCloseToCard=" + printCloseToCard);
+                if (bgmAudioSource != null)
+                {
+                    for (int i = 0; i < bgmAudioSource.Length; i++)
+                    {
+                        bgmAudioSource[i].volume = bgmAudioVolume;
+                    }
+                    bgmVolumeSlider.value = bgmAudioVolume;
+                }
+                if (fxAudioSource != null)
+                {
+                    for (int i = 0; i < fxAudioSource.Length; i++)
+                    {
+                        fxAudioSource[i].volume = fxAudioVolume;
+                    }
+                    fxVolumeSlider.value = fxAudioVolume;
+                }
+
+                //Debug.Log("Loaded settings. Path=" + selectedFolderPath + " PrintCloseToCard=" + printCloseToCard);
             }
 
-            // Update UI if assigned (don't trigger toggle change callback)
             if (imageDownPath != null)
             {
                 imageDownPath.SetTextWithoutNotify(selectedFolderPath);
@@ -133,7 +183,6 @@ public class AppManager : MonoBehaviour
 
             if (printCloseToggle != null)
             {
-                // Use SetIsOnWithoutNotify so we don't trigger SetPrintCloseToCard while loading
                 printCloseToggle.SetIsOnWithoutNotify(printCloseToCard);
             }
         }
@@ -155,7 +204,9 @@ public class AppManager : MonoBehaviour
             var lines = new List<string>
             {
                 $"SelectedFolderPath: {selectedFolderPath}",
-                $"PrintCloseToCard: {printCloseToCard}"
+                $"PrintCloseToCard: {printCloseToCard}",
+                $"BGMAudioVolume: {bgmAudioVolume}",
+                $"FXAudioVolume: {fxAudioVolume}"
             };
 
             File.WriteAllLines(settingsFilePath, lines);
@@ -177,7 +228,6 @@ public class AppManager : MonoBehaviour
 
             if (paths != null && paths.Length > 0)
             {
-                // Use helper to centralize side-effects (UI update + save + event)
                 UpdateSelectedFolderPath(paths[0], true);
                 Debug.Log("Selected folder: " + selectedFolderPath);
             }
@@ -201,16 +251,13 @@ public class AppManager : MonoBehaviour
             return;
         }
 
-        // normalize path as needed (optional)
         selectedFolderPath = path;
 
-        // Update UI without invoking listeners
         if (imageDownPath != null)
         {
             imageDownPath.SetTextWithoutNotify(selectedFolderPath);
         }
 
-        // Ensure the folder exists
         try
         {
             if (!Directory.Exists(selectedFolderPath))
@@ -231,8 +278,6 @@ public class AppManager : MonoBehaviour
         OnSelectedFolderPathChanged?.Invoke(selectedFolderPath);
     }
 
-    // Call this from UI (e.g., toggle) to change the print-close-to-card option and persist it.
-    // This method is used as the toggle callback (onValueChanged).
     public void SetPrintCloseToCard(bool enabled)
     {
         if (printCloseToCard == enabled) return;
@@ -241,6 +286,27 @@ public class AppManager : MonoBehaviour
         SaveSettings();
         OnPrintCloseToCardChanged?.Invoke(printCloseToCard);
         Debug.Log("PrintCloseToCard set to: " + printCloseToCard);
+    }
+
+    public void ChangeSoundVolume()
+    {
+        bgmAudioVolume = bgmVolumeSlider != null ? bgmVolumeSlider.value : bgmAudioVolume;
+        fxAudioVolume = fxVolumeSlider != null ? fxVolumeSlider.value : fxAudioVolume;
+        if (bgmAudioSource != null)
+        {
+            for (int i = 0; i < bgmAudioSource.Length; i++)
+            {
+                bgmAudioSource[i].volume = bgmAudioVolume;
+            }
+        }
+        if (fxAudioSource != null)
+        {
+            for (int i = 0; i < fxAudioSource.Length; i++)
+            {
+                fxAudioSource[i].volume = fxAudioVolume;
+            }
+        }
+        SaveSettings();
     }
 
     public void ChooseSettingOption(string option)
@@ -275,5 +341,15 @@ public class AppManager : MonoBehaviour
                 Debug.LogWarning("Unknown setting option: " + option);
                 break;
         }
+    }
+
+    public void ChangeScene(string sceneName, float timeChangeScene, bool loadingOn, float timeLoad)
+    {
+        StartCoroutine(sceneFunctional.ChangeScene(sceneName, timeChangeScene, loadingImage, loadingOn, timeLoad));
+    }
+
+    public void PlayBGM(int audioIndex, bool canPlay)
+    {
+        AudioFunctional.PlaySound(bgmAudioSource[audioIndex], canPlay);
     }
 }

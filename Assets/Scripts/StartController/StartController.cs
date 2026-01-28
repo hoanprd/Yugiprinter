@@ -8,17 +8,11 @@ public class StartController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        AppManager.Instance.PlayBGM(0, true);
     }
 
     public void StartButtonGo()
     {
-        SceneManager.LoadScene("MenuScene");
+        AppManager.Instance.ChangeScene("MenuScene", 0.5f, true, 1f);
     }    
 }
