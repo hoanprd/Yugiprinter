@@ -7,9 +7,15 @@ using UnityEngine.SceneManagement;
 
 public class MenuController : MonoBehaviour
 {
+    void Start()
+    {
+        AppManager.Instance.PlayBGM(0, false);
+        AppManager.Instance.PlayBGM(2, false);
+        AppManager.Instance.PlayBGM(1, true);
+    }
+
     public void InCardOpen()
     {
-        Debug.Log("Chuyển sang InCardScene");
         SceneManager.LoadScene("InCardScene");
     }
 
