@@ -9,14 +9,17 @@ public class MenuController : MonoBehaviour
 {
     void Start()
     {
-        AppManager.Instance.PlayBGM(0, false);
-        AppManager.Instance.PlayBGM(2, false);
+        for (int i = 0; i < AppManager.Instance.bgmAudioSource.Length; i++)
+        {
+            AppManager.Instance.PlayBGM(i, false);
+        }
+
         AppManager.Instance.PlayBGM(1, true);
     }
 
     public void InCardOpen()
     {
-        SceneManager.LoadScene("InCardScene");
+        AppManager.Instance.ChangeScene("InCardScene", 0.5f, true, 1f);
     }
 
     public void OpenAppSetting(string option)
