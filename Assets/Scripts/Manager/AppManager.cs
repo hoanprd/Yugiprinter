@@ -14,6 +14,7 @@ public class AppManager : MonoBehaviour
     public static AppManager Instance;
 
     SceneFunctional sceneFunctional;
+    NetworkFunctional networkFunctional;
 
     public GameObject appSetting;
     public GameObject cardPrintSetting, otherSetting;
@@ -61,6 +62,7 @@ public class AppManager : MonoBehaviour
         }
 
         sceneFunctional = new SceneFunctional();
+        networkFunctional = new NetworkFunctional();
     }
 
     private void OnDestroy()
@@ -375,6 +377,17 @@ public class AppManager : MonoBehaviour
     {
         AudioFunctional.PlaySound(bgmAudioSource[audioIndex], canPlay);
     }
+
+    public void CheckInternet()
+    {
+        StartCoroutine(networkFunctional.CheckInternetConnection((isConnected) => {
+            if (!isConnected)
+            {
+                //Hiện banner no internet
+                Debug.LogError("No internet connection. Ads cannot be loaded.");
+            }
+        }));
+    }    
 
     public void ExitApp()
     {
