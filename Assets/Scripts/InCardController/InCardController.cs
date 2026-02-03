@@ -6,7 +6,11 @@ public class InCardController : MonoBehaviour
 {
     void Start()
     {
-        AppManager.Instance.PlayBGM(1, false);
+        for (int i = 0; i < AppManager.Instance.bgmAudioSource.Length; i++)
+        {
+            AppManager.Instance.PlayBGM(i, false);
+        }
+
         AppManager.Instance.PlayBGM(2, true);
     }
 

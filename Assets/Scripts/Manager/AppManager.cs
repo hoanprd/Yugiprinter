@@ -21,18 +21,16 @@ public class AppManager : MonoBehaviour
     public Slider bgmVolumeSlider, fxVolumeSlider;
     public AudioSource[] bgmAudioSource, fxAudioSource;
     public TMP_InputField imageDownPath;
-    public Toggle printCloseToggle;
+    public Toggle printCloseToggle, skipIntroToggle;
 
-    // Kept the existing backing property name to avoid breaking other code.
-    // It's recommended to rename this to `SelectedFolderPath` (PascalCase) later.
     public string selectedFolderPath { get; private set; } = string.Empty;
     public bool printCloseToCard { get; private set; } = false;
     public float bgmAudioVolume { get; private set; } = 0.5f;
     public float fxAudioVolume { get; private set; } = 0.5f;
+    public bool skipIntro { get; private set; } = false;
 
-    // Events so other scripts can react to changes instead of polling.
     public event Action<string> OnSelectedFolderPathChanged;
-    public event Action<bool> OnPrintCloseToCardChanged;
+    public event Action<bool> OnPrintCloseToCardChanged, OnSkipIntroChanged;
 
     private readonly string settingsFolderPath =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "PRD Team", "YugipriterSetting");
@@ -46,10 +44,15 @@ public class AppManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
             LoadSettings();
-            // Subscribe to toggle changes if assigned
+
             if (printCloseToggle != null)
             {
                 printCloseToggle.onValueChanged.AddListener(SetPrintCloseToCard);
+            }
+
+            if (skipIntroToggle != null)
+            {
+                skipIntroToggle.onValueChanged.AddListener(SetSkipIntro);
             }
         }
         else
@@ -62,10 +65,14 @@ public class AppManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        // Unsubscribe to avoid potential leaks
         if (printCloseToggle != null)
         {
             printCloseToggle.onValueChanged.RemoveListener(SetPrintCloseToCard);
+        }
+
+        if (skipIntroToggle != null)
+        {
+            skipIntroToggle.onValueChanged.AddListener(SetSkipIntro);
         }
     }
 
@@ -73,20 +80,16 @@ public class AppManager : MonoBehaviour
     {
         try
         {
-            // Ensure folder exists
             if (!Directory.Exists(settingsFolderPath))
             {
                 Directory.CreateDirectory(settingsFolderPath);
             }
 
-            // If no settings file, create default settings and save
             if (!File.Exists(settingsFilePath))
             {
-                // Default values
                 selectedFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "CardImageData");
                 printCloseToCard = false;
 
-                // Ensure default folder exists
                 try
                 {
                     if (!Directory.Exists(selectedFolderPath))
@@ -115,6 +118,8 @@ public class AppManager : MonoBehaviour
                     }
                     fxVolumeSlider.value = 0.5f;
                 }
+
+                skipIntro = false;
 
                 SaveSettings();
                 Debug.Log("Settings file not found. Created default settings at: " + settingsFilePath);
@@ -148,9 +153,12 @@ public class AppManager : MonoBehaviour
                     {
                         if (float.TryParse(value, out var f)) fxAudioVolume = f;
                     }
+                    else if (key.Equals("SkipIntro", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (bool.TryParse(value, out var s)) skipIntro = s;
+                    }
                 }
 
-                // If no path read from file, fallback to default
                 if (string.IsNullOrEmpty(selectedFolderPath))
                 {
                     selectedFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "CardImageData");
@@ -185,6 +193,11 @@ public class AppManager : MonoBehaviour
             {
                 printCloseToggle.SetIsOnWithoutNotify(printCloseToCard);
             }
+
+            if (skipIntroToggle != null)
+            {
+                skipIntroToggle.SetIsOnWithoutNotify(skipIntro);
+            }
         }
         catch (Exception ex)
         {
@@ -206,7 +219,8 @@ public class AppManager : MonoBehaviour
                 $"SelectedFolderPath: {selectedFolderPath}",
                 $"PrintCloseToCard: {printCloseToCard}",
                 $"BGMAudioVolume: {bgmAudioVolume}",
-                $"FXAudioVolume: {fxAudioVolume}"
+                $"FXAudioVolume: {fxAudioVolume}",
+                $"SkipIntro: {skipIntro}"
             };
 
             File.WriteAllLines(settingsFilePath, lines);
@@ -242,7 +256,6 @@ public class AppManager : MonoBehaviour
         }
     }
 
-    // Centralized method to set folder programmatically (validates, updates UI, persists, notifies).
     public void UpdateSelectedFolderPath(string path, bool save = true)
     {
         if (string.IsNullOrWhiteSpace(path))
@@ -286,6 +299,16 @@ public class AppManager : MonoBehaviour
         SaveSettings();
         OnPrintCloseToCardChanged?.Invoke(printCloseToCard);
         Debug.Log("PrintCloseToCard set to: " + printCloseToCard);
+    }
+
+    public void SetSkipIntro(bool enabled)
+    {
+        if (skipIntro == enabled) return;
+
+        skipIntro = enabled;
+        SaveSettings();
+        OnSkipIntroChanged?.Invoke(skipIntro);
+        Debug.Log("Skip intro set to: " + skipIntro);
     }
 
     public void ChangeSoundVolume()
@@ -351,5 +374,10 @@ public class AppManager : MonoBehaviour
     public void PlayBGM(int audioIndex, bool canPlay)
     {
         AudioFunctional.PlaySound(bgmAudioSource[audioIndex], canPlay);
+    }
+
+    public void ExitApp()
+    {
+        Application.Quit();
     }
 }

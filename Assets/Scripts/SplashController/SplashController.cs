@@ -5,12 +5,14 @@ using PRD;
 
 public class SplashController : MonoBehaviour
 {
-    IntroFunctional introFunctional;
+    public float splashTime;
 
     // Start is called before the first frame update
     void Start()
     {
-        introFunctional = new IntroFunctional();
-        StartCoroutine(introFunctional.RunTimeStart("IntroScene", 5f));
+        if (AppManager.Instance.skipIntro == false)
+            AppManager.Instance.ChangeScene("IntroScene", splashTime, false, 0f);
+        else
+            AppManager.Instance.ChangeScene("StartScene", splashTime, false, 0f);
     }
 }
