@@ -19,6 +19,8 @@ public class AppManager : MonoBehaviour
     public GameObject appSetting;
     public GameObject cardPrintSetting, otherSetting;
     public GameObject loadingImage;
+    public GameObject[] disconnectedDialog;
+
     public Slider bgmVolumeSlider, fxVolumeSlider;
     public AudioSource[] bgmAudioSource, fxAudioSource;
     public TMP_InputField imageDownPath;
@@ -29,6 +31,8 @@ public class AppManager : MonoBehaviour
     public float bgmAudioVolume { get; private set; } = 0.5f;
     public float fxAudioVolume { get; private set; } = 0.5f;
     public bool skipIntro { get; private set; } = false;
+
+    public bool internetConnected { get; private set; }
 
     public event Action<string> OnSelectedFolderPathChanged;
     public event Action<bool> OnPrintCloseToCardChanged, OnSkipIntroChanged;
@@ -381,10 +385,13 @@ public class AppManager : MonoBehaviour
     public void CheckInternet()
     {
         StartCoroutine(networkFunctional.CheckInternetConnection((isConnected) => {
+            internetConnected = isConnected;
             if (!isConnected)
             {
-                //Hiện banner no internet
-                Debug.LogError("No internet connection. Ads cannot be loaded.");
+                foreach (var dialog in disconnectedDialog)
+                {
+                    dialog.SetActive(true);
+                }
             }
         }));
     }    
