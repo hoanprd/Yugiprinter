@@ -13,16 +13,12 @@ public class StartController : MonoBehaviour
 
     public void StartButtonGo()
     {
-        AppManager.Instance.CheckInternet();
-
-        if (AppManager.Instance.internetConnected)
+        AppManager.Instance.CheckInternet((connected) =>
         {
-            AppManager.Instance.ChangeScene("MenuScene", 0.5f, true, 1f);
-        }
-        else
-        {
-            return;
-        }
-        //AppManager.Instance.ChangeScene("MenuScene", 0.5f, true, 1f);
-    }    
+            if (connected)
+            {
+                AppManager.Instance.ChangeScene("MenuScene", 0.5f, true, 1f);
+            }
+        });
+    }
 }

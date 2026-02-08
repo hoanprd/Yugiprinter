@@ -19,7 +19,13 @@ public class MenuController : MonoBehaviour
 
     public void InCardOpen()
     {
-        AppManager.Instance.ChangeScene("InCardScene", 0.5f, true, 1f);
+        AppManager.Instance.CheckInternet((connected) =>
+        {
+            if (connected)
+            {
+                AppManager.Instance.ChangeScene("InCardScene", 0.5f, true, 1f);
+            }
+        });
     }
 
     public void OpenAppSetting(string option)

@@ -382,7 +382,7 @@ public class AppManager : MonoBehaviour
         AudioFunctional.PlaySound(bgmAudioSource[audioIndex], canPlay);
     }
 
-    public void CheckInternet()
+    public void CheckInternet1()
     {
         StartCoroutine(networkFunctional.CheckInternetConnection((isConnected) => {
             internetConnected = isConnected;
@@ -394,7 +394,36 @@ public class AppManager : MonoBehaviour
                 }
             }
         }));
-    }    
+    }
+    public void CheckInternet(Action<bool> onChecked)
+    {
+        StartCoroutine(networkFunctional.CheckInternetConnection((connected) =>
+        {
+            internetConnected = connected;
+
+            if (!connected)
+            {
+                DisconnetedDialogPopup(connected);
+            }
+            else
+            {
+                DisconnetedDialogPopup(connected);
+                onChecked?.Invoke(connected);
+            }
+        }));
+    }
+
+    public void DisconnetedDialogPopup(bool result)
+    {
+
+        foreach (var dialog in disconnectedDialog)
+        {
+            if (result)
+                dialog.SetActive(false);
+            else
+                dialog.SetActive(true);
+        }
+    }
 
     public void ExitApp()
     {
